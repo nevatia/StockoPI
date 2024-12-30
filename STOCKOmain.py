@@ -6,7 +6,7 @@ import concurrent.futures
 
 from datetime import datetime, timedelta
 import datetime as dt
-import time
+import time, sys
 from time import sleep
 import warnings
 warnings.filterwarnings("ignore")
@@ -53,9 +53,9 @@ def socket():
             SYMBOLDICT[key] = message
             live_data[key] = message
             
-        #print(f"quote updated ")
+        print(f"quote updated ")
         #print(SYMBOLDICT)
-        #print(live_data)
+        print(live_data)
     def open_callback():
         global socket_opened
         socket_opened = True
@@ -82,14 +82,14 @@ def strategy():
         print(f"An Exception: {err} has occured in the program.")
         sys.exit()
 
-def place_order(self,exchange: str, symbol: str, qty: int, BS: str):
+def place_order(exchange: str, symbol: str, qty: int, BS: str):
     ordid = 0
     try:
         if BS == "SELL":
             t_type = TransactionType.Sell
         else:
             t_type = TransactionType.Buy
-        ordid=self.api.place_order(order_side = t_type,
+        ordid=api.place_order(transaction_type = t_type,
                      instrument = api.get_instrument_by_symbol(exchange, symbol),
                      quantity = qty,
                      order_type = OrderType.Market,
@@ -174,17 +174,18 @@ if __name__ == '__main__':
             sleep(1)
 
             # subscribe to websocket
-            Token = api.get_instrument_by_symbol("NFO","PFC25JANFUT") #GetToken(exchange,tradingsymbol)
+            Token = api.get_instrument_by_symbol("NFO","PFC25JANFUT") 
             print(Token)
             api.subscribe(Token, LiveFeedType.MARKET_DATA)        
+            sleep(1)
 
-            #ord1=api.place_order('NSE','IDEA-EQ', 1, "SELL")
-            #print(ord1)            
+            #Cautiously Place market order - 
+            #ord1=place_order('NSE','IDEA-EQ', 1, "SELL")
+            #print("\n\nOrder placed :- ",ord1)            
         else:
             print("Credential is not correct")
             sys.exit()    
     except( KeyboardInterrupt, SystemExit ):
-        #dt2.range("I23").value = ""
         logwritter( "Keyboard Interrupt. EXITING ...." )    
         print( "Keyboard Interrupt. EXITING ...." )    
         sys.exit()
