@@ -167,6 +167,7 @@ class MarketStatus(CStruct):
     status = CString(length="length_of_status")
 
 class OrderUpdate(CStruct):
+    pass
     ##pending
 
 
