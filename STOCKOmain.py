@@ -9,6 +9,7 @@ import datetime as dt
 import time, sys
 from time import sleep
 import warnings
+import pandas as pd
 warnings.filterwarnings("ignore")
 
 #logging.basicConfig(filename="./logexcel.txt", level=logging.DEBUG,format="%(asctime)s %(message)s")
@@ -22,6 +23,7 @@ def Stocko_login():
     try:    
         api = AlphaTrade(login_id=config.login_id, password=config.password, totp=config.Totp, client_secret = config.client_secret, master_contracts_to_download=['NSE','NFO','BFO'])        
         print(f"{datetime.now().time()} : Logged in successfully")
+            
         isConnected = 1
     except Exception as e:
         print(f"{datetime.now().time()} : Login failed. Resolve issue and retry..error is:: {e}")
@@ -31,6 +33,7 @@ def Stocko_login():
 socket_opened = False
 SYMBOLDICT = {}
 live_data = {}
+ord_updt = []
 def logwritter(msg, filename='log.log'):
     out = datetime.now().strftime("\n%Y%m%d,%H:%M:%S.%f")[:-2]+" : "+str(msg)
     open(filename, 'a').write(out)
@@ -41,8 +44,9 @@ def socket():
         print(inmessage)
         global live_data
         global SYMBOLDICT        
-        fields = ['token', 'ltp', 'pc', 'close', 'open', 'high', 'low', 'volume', 'ltq', 'ltp','best_bid_price','best_ask_price','atp','oi','ap']            
+        fields = ['token', 'ltp', 'pc', 'close', 'open', 'high', 'low', 'volume', 'ltq', 'ltp','best_bid_price','best_ask_price','atp','current_oi', 'initial_oi','yearly_high', 'yearly_low', 'low_dpr','high_dpr'] 
         message = { field: inmessage[field] for field in set(fields) & set(inmessage.keys())}
+
         key = inmessage['exchange'] + '|' + inmessage['instrument'][2]
         if key in SYMBOLDICT:
             symbol_info =  SYMBOLDICT[key]
@@ -52,10 +56,13 @@ def socket():
         else:
             SYMBOLDICT[key] = message
             live_data[key] = message
-            
-        print(f"quote updated ")
-        #print(SYMBOLDICT)
-        print(live_data)
+        #print(f"WS quote updated:- \n",live_data)
+
+    def order_update_callback(msg):
+        global ord_updt
+        ord_updt = msg
+        print("WS order update:- \n ",ord_updt)
+
     def open_callback():
         global socket_opened
         socket_opened = True
@@ -64,19 +71,25 @@ def socket():
 
     api.start_websocket(subscribe_callback=event_handler_quote_update,
                           socket_open_callback=open_callback,
+                          order_update_callback = order_update_callback,
                           run_in_background=True)
+
     while(socket_opened==False):
-        pass
+            #print(socket_opened)
+            pass
+    print("Connected to WebSocket...")
     #api.subscribe(api.get_instrument_by_symbol('NSE', 'TATASTEEL-EQ'), LiveFeedType.MARKET_DATA)
     #sleep(3)
     
 
-def strategy():
+def WS_start():
     logwritter("Starting Bot......")
     try:
         print("Starting Websocket................................................................")
         socket()
-        #sleep(3)
+        print("Subscribing WS order updates..")
+        api.subscribe_order_update()
+        sleep(1)
     except Exception as err:
         print("Websocket Connection Failed for trading bot. Exiting..")
         print(f"An Exception: {err} has occured in the program.")
@@ -117,10 +130,14 @@ if __name__ == '__main__':
     try:
         print("Running Stocko app..")
         if(Stocko_login() == 1 ): 
+            # Start websocket
+            WS_start()
+            
             idx=api.get_instrument_by_symbol('NFO', 'NIFTY25JANFUT')
             stk=api.get_instrument_by_symbol('NSE', 'RELIANCE-EQ')
             print(idx)
             print(stk) 
+            
             print("Scrip info :-")
             scrip_info = api.get_scrip_info(idx)
             print(scrip_info)
@@ -140,15 +157,26 @@ if __name__ == '__main__':
             print("Subscribed exchanges :-")
             enabled_exchanges= api.get_exchanges()
             print(enabled_exchanges)
-
+            
+            
+            Token = api.get_instrument_by_symbol("NFO","RELIANCE25JAN1300CE") 
+            api.subscribe(Token, LiveFeedType.MARKET_DATA)  
+            sleep(5)
+            
+            
+            Token = api.get_instrument_by_symbol("NSE","IDEA-EQ") 
+            api.subscribe(Token, LiveFeedType.MARKET_DATA)        
+            sleep(1)
 
             ############ ORDERS
-
             #Cautiously Place market order - 
-            #def place_order(exchange, symbol, qty, price, BS, order_type):
-            ord1=place_order('NSE','IDEA-EQ', 1, 6.00, "BUY", "LIMIT")
+            ord1=place_order('NSE','IDEA-EQ', 1, 5.00, "BUY", "LIMIT")
             print("\n\nOrder placed :- ",ord1)            
             print( ord1['data']['oms_order_id'])
+            sleep(5)
+            print("\n\n")
+            print(pd.DataFrame([ord_updt]))
+            ##############################################
 
             print("Order status :-")
             ord_hist= api.get_order_history(order_id = ord1['data']['oms_order_id'])
@@ -186,22 +214,11 @@ if __name__ == '__main__':
             net_pos= api.fetch_netwise_positions()
             print(net_pos)
 
-            
-
-
-            strategy()          
-            while(socket_opened==False):
-                print(socket_opened)
-                pass
-            print("Connected to WebSocket...")
-            sleep(1)
-
-            # subscribe to websocket
             Token = api.get_instrument_by_symbol("NFO","PFC25JANFUT") 
             print(Token)
             api.subscribe(Token, LiveFeedType.MARKET_DATA)        
             sleep(1)
-
+            
             
         else:
             print("Credential is not correct")
