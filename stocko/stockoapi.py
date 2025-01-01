@@ -1,3 +1,8 @@
+"""
+Stocko stock trading api wrapper.
+Original creater Algo2t for Sasonline.
+Modified By Sanju for Stocko on 01-01-2025.
+"""
 import csv
 import ast
 import os
@@ -70,7 +75,7 @@ class WsFrameMode(enum.IntEnum):
     OI = 8
     MARKET_STATUS = 9
     EXCHANGE_MESSAGES = 10
-    ORDERUPDATE = 50
+    ORDERUPDATE = 11 #50
 
     
 
@@ -95,7 +100,11 @@ class MarketData(CStruct):
     close = CUInt()
     yearly_high = CUInt()
     yearly_low = CUInt()
-
+    low_dpr = CUInt()
+    high_dpr = CUInt()
+    current_oi = CUInt()
+    initial_oi = CUInt()
+    
 class CompactData(CStruct):
     exchange = CUChar()
     token = CUInt()
@@ -166,9 +175,6 @@ class MarketStatus(CStruct):
     length_of_status = CUShort()
     status = CString(length="length_of_status")
 
-class OrderUpdate(CStruct):
-    pass
-    ##pending
 
 
 class AlphaTrade(Connect):
@@ -373,11 +379,9 @@ class AlphaTrade(Connect):
             if(self.__exchange_messages_callback is not None):
                 self.__exchange_messages_callback(res)
         elif(message[0] == WsFrameMode.ORDERUPDATE):
-            p = OrderUpdate.parse(message[1:]).__dict__
-            res = self.__modify_human_readable_values(p)
-            print(res)
-            #if(self.__subscribe_callback is not None):
-            #    self.__subscribe_callback(res)        
+            p= json.loads(message[5:])
+            if(self.__subscribe_callback is not None):
+                self.__order_update_callback(p)
 
     def __on_close_callback(self, ws=None):
         self.__websocket_connected = False
@@ -853,7 +857,27 @@ class AlphaTrade(Connect):
     def get_open_interest(self):
         """ Get stored exchange messages """
         return self.__open_interest
+    
     # Manual Add completed
+    def subscribe_order_update(self):
+        payload = [self.__login_id, "web"]
+        data = json.dumps({'a': 'subscribe', 'v': payload, 'm': "updates"})
+        return self.__ws_send(data)
+    
+    def unsubscribe_order_update(self):
+        payload = [self.__login_id, "web"]
+        data = json.dumps({'a': 'unsubscribe', 'v': payload, 'm': "updates"})
+        return self.__ws_send(data)
+        
+    def subscribe_position_update(self):
+        payload = [self.__login_id, "web"]
+        data = json.dumps({'a': 'subscribe', 'v': payload, 'm': "position_updates"})
+        return self.__ws_send(data)
+
+    def subscribe_position_update(self):
+        payload = [self.__login_id, "web"]
+        data = json.dumps({'a': 'unsubscribe', 'v': payload, 'm': "position_updates"})
+        return self.__ws_send(data)
 
     def subscribe(self, instrument, live_feed_type):
         """ subscribe to the current feed of an instrument """
@@ -886,7 +910,9 @@ class AlphaTrade(Connect):
             mode = 'full_snapquote'
         elif(live_feed_type == LiveFeedType.OI):
             mode = 'open_interest'
-        
+        elif(live_feed_type == LiveFeedType.ORDERUPDATE): # message_type == "OrderUpdateMessage":
+                arr = "OrderUpdateMessage"
+                mode = "updates"
         data = json.dumps({'a': 'subscribe', 'v': arr, 'm': mode})
         return self.__ws_send(data)
 
