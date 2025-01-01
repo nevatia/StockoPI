@@ -287,7 +287,10 @@ class AlphaTrade(Connect):
                 'low',
                 'close',
                 'yearly_high',
-                'yearly_low']
+                'yearly_low',
+                "low_dpr",
+                "high_dpr",
+                ]
         for key in keys:
             if(key in dictionary):
                 dictionary[key] = dictionary[key]/multiplier
@@ -313,6 +316,12 @@ class AlphaTrade(Connect):
         df.set_index('date', inplace=True)
         return df
 
+    def __convert_oi(self, dictionary):
+        if('instrument' in dictionary):
+            dictionary['current_oi'] = int(dictionary['current_oi']/dictionary['instrument'].lot_size)
+            dictionary['initial_oi'] = int(dictionary['initial_oi']/ dictionary['instrument'].lot_size)
+        return dictionary
+
     def __convert_exchanges(self, dictionary):
         if('exchange' in dictionary):
             d = self.__exchange_codes
@@ -331,6 +340,7 @@ class AlphaTrade(Connect):
             dictionary, self.__exchange_price_multipliers[dictionary['exchange']])
         dictionary = self.__convert_exchanges(dictionary)
         dictionary = self.__convert_instrument(dictionary)
+        dictionary = self.__convert_oi(dictionary)
         return dictionary
 
     def __on_data_callback(self, ws=None, message=None, data_type=None, continue_flag=None):        
