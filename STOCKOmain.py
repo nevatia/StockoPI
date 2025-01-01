@@ -82,19 +82,27 @@ def strategy():
         print(f"An Exception: {err} has occured in the program.")
         sys.exit()
 
-def place_order(exchange: str, symbol: str, qty: int, BS: str):
+def place_order(exchange: str, symbol: str, qty: int, price : float, BS: str, order_type: str):
     ordid = 0
     try:
         if BS == "SELL":
             t_type = TransactionType.Sell
         else:
             t_type = TransactionType.Buy
+        
+        if order_type == "MARKET":
+            order_type = OrderType.Market,
+            price = 0.0
+        else:
+            order_type = OrderType.Limit,
+            price = price
+        
         ordid=api.place_order(transaction_type = t_type,
                      instrument = api.get_instrument_by_symbol(exchange, symbol),
                      quantity = qty,
                      order_type = OrderType.Market,
                      product_type = ProductType.Delivery,
-                     price = 00.0,
+                     price = price,
                      trigger_price = None,
                      stop_loss = None,
                      square_off = None,
@@ -125,14 +133,34 @@ if __name__ == '__main__':
             bal=api.get_balance() 
             print(bal)
 
-            print("cancel order :-")
-            cancel= api.cancel_order(5200001)
-            print(cancel)
-
-            
             print("Demat holdings :-")
             holdings= api.get_dematholdings()
             print(holdings)
+
+            print("Subscribed exchanges :-")
+            enabled_exchanges= api.get_exchanges()
+            print(enabled_exchanges)
+
+
+            ############ ORDERS
+
+            #Cautiously Place market order - 
+            #def place_order(exchange, symbol, qty, price, BS, order_type):
+            ord1=place_order('NSE','IDEA-EQ', 1, 6.00, "BUY", "LIMIT")
+            print("\n\nOrder placed :- ",ord1)            
+            print( ord1['data']['oms_order_id'])
+
+            print("Order status :-")
+            ord_hist= api.get_order_history(order_id = ord1['data']['oms_order_id'])
+            print(ord_hist)
+
+
+            print("cancel order :-")
+            cancel= api.cancel_order(ord1['data']['oms_order_id'])
+            print(cancel)
+
+            
+           
             print("Tradeboook :-")
             tradebook= api.get_tradebook()
             print(tradebook)
@@ -149,10 +177,7 @@ if __name__ == '__main__':
             ordbook= api.get_orderbook()
             print(ordbook)
 
-            print("Subscribed exchanges :-")
-            enabled_exchanges= api.get_exchanges()
-            print(enabled_exchanges)
-
+            
             print("Live netpositions :-")
             day_pos = api.fetch_live_positions()
             print(day_pos)
@@ -161,9 +186,7 @@ if __name__ == '__main__':
             net_pos= api.fetch_netwise_positions()
             print(net_pos)
 
-            print("Order status :-")
-            ord_hist= api.get_order_history(order_id='241228000000057')
-            print(ord_hist)
+            
 
 
             strategy()          
@@ -179,9 +202,7 @@ if __name__ == '__main__':
             api.subscribe(Token, LiveFeedType.MARKET_DATA)        
             sleep(1)
 
-            #Cautiously Place market order - 
-            #ord1=place_order('NSE','IDEA-EQ', 1, "SELL")
-            #print("\n\nOrder placed :- ",ord1)            
+            
         else:
             print("Credential is not correct")
             sys.exit()    
