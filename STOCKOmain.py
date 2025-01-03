@@ -90,6 +90,8 @@ def WS_start():
         print("Subscribing WS order updates..")
         api.subscribe_order_update()
         sleep(1)
+        api.subscribe_position_update()
+        sleep(1)
     except Exception as err:
         print("Websocket Connection Failed for trading bot. Exiting..")
         print(f"An Exception: {err} has occured in the program.")
@@ -133,6 +135,7 @@ if __name__ == '__main__':
             # Start websocket
             WS_start()
             
+            
             idx=api.get_instrument_by_symbol('NFO', 'NIFTY25JANFUT')
             stk=api.get_instrument_by_symbol('NSE', 'RELIANCE-EQ')
             print(idx)
@@ -160,13 +163,21 @@ if __name__ == '__main__':
             
             
             Token = api.get_instrument_by_symbol("NFO","RELIANCE25JAN1300CE") 
-            api.subscribe(Token, LiveFeedType.MARKET_DATA)  
-            sleep(5)
+            api.subscribe(Token, LiveFeedType.MARKET_DATA) 
+            sleep(2) 
+            api.subscribe(Token, LiveFeedType.COMPACT)  
+            sleep(2) 
+            api.subscribe(Token, LiveFeedType.SNAPQUOTE)  
+            sleep(2) 
+            api.subscribe(Token, LiveFeedType.FULL_SNAPQUOTE)  
+            sleep(2) 
             
             
             Token = api.get_instrument_by_symbol("NSE","IDEA-EQ") 
             api.subscribe(Token, LiveFeedType.MARKET_DATA)        
+
             sleep(1)
+            
 
             ############ ORDERS
             #Cautiously Place market order - 
