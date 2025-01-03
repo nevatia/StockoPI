@@ -62,7 +62,7 @@ class LiveFeedType(enum.Enum):
     COMPACT = 2
     SNAPQUOTE = 3
     FULL_SNAPQUOTE = 4
-    OI = 8
+    #OI = 8
 
 class WsFrameMode(enum.IntEnum):
     MARKETDATA = 1
@@ -76,7 +76,6 @@ class WsFrameMode(enum.IntEnum):
     MARKET_STATUS = 9
     EXCHANGE_MESSAGES = 10
     ORDERUPDATE = 11 #50
-
     
 
 class MarketData(CStruct):
@@ -105,13 +104,28 @@ class MarketData(CStruct):
     current_oi = CUInt()
     initial_oi = CUInt()
     
-class CompactData(CStruct):
+class CompactDataoz(CStruct):
     exchange = CUChar()
     token = CUInt()
     ltp = CUInt()
     change = CUInt()
     exchange_time_stamp = CUInt()
     volume = CUInt()
+
+
+class CompactData(CStruct):
+    exchange = CUChar()
+    token = CUInt()
+    ltp = CUInt()
+    change = CUInt()
+    exchange_time_stamp = CUInt()
+    low_dpr = CUInt()
+    high_dpr = CUInt()
+    current_oi = CUInt()
+    initial_oi = CUInt()
+    best_bid_price = CUInt()
+    best_ask_price = CUInt()
+
 
 
 class SnapQuote(CStruct):
@@ -144,7 +158,7 @@ class FullSnapQuote(CStruct):
     total_sell_quantity = CULong()
     volume = CUInt()
 
-
+'''
 class DPR(CStruct):
     exchange = CUChar()
     token = CUInt()
@@ -160,7 +174,7 @@ class OpenInterest(CStruct):
     initial_open_interest = CUChar()
     exchange_time_stamp = CUInt()
 
-
+'''
 class ExchangeMessage(CStruct):
     exchange = CUChar()
     length = CUShort()
@@ -340,7 +354,7 @@ class AlphaTrade(Connect):
             dictionary, self.__exchange_price_multipliers[dictionary['exchange']])
         dictionary = self.__convert_exchanges(dictionary)
         dictionary = self.__convert_instrument(dictionary)
-        dictionary = self.__convert_oi(dictionary)
+        #dictionary = self.__convert_oi(dictionary)
         return dictionary
 
     def __on_data_callback(self, ws=None, message=None, data_type=None, continue_flag=None):        
@@ -366,16 +380,6 @@ class AlphaTrade(Connect):
             res = self.__modify_human_readable_values(p)
             if(self.__subscribe_callback is not None):
                 self.__subscribe_callback(res)
-        elif(message[0] == WsFrameMode.DPR):
-            p = DPR.parse(message[1:]).__dict__
-            res = self.__modify_human_readable_values(p)
-            if(self.__dpr_callback is not None):
-                self.__dpr_callback(res)
-        elif(message[0] == WsFrameMode.OI):
-            p = OpenInterest.parse(message[1:]).__dict__
-            res = self.__modify_human_readable_values(p)
-            if(self.__oi_callback is not None):
-                self.__oi_callback(res)
         elif(message[0] == WsFrameMode.MARKET_STATUS):
             p = MarketStatus.parse(message[1:]).__dict__
             res = self.__modify_human_readable_values(p)
@@ -392,7 +396,18 @@ class AlphaTrade(Connect):
             p= json.loads(message[5:])
             if(self.__subscribe_callback is not None):
                 self.__order_update_callback(p)
-
+        '''
+        elif(message[0] == WsFrameMode.DPR):
+            p = DPR.parse(message[1:]).__dict__
+            res = self.__modify_human_readable_values(p)
+            if(self.__dpr_callback is not None):
+                self.__dpr_callback(res)
+        elif(message[0] == WsFrameMode.OI):
+            p = OpenInterest.parse(message[1:]).__dict__
+            res = self.__modify_human_readable_values(p)
+            if(self.__oi_callback is not None):
+                self.__oi_callback(res)
+        '''
     def __on_close_callback(self, ws=None):
         self.__websocket_connected = False
         if self.__on_disconnect:
@@ -884,7 +899,7 @@ class AlphaTrade(Connect):
         data = json.dumps({'a': 'subscribe', 'v': payload, 'm': "position_updates"})
         return self.__ws_send(data)
 
-    def subscribe_position_update(self):
+    def unsubscribe_position_update(self):
         payload = [self.__login_id, "web"]
         data = json.dumps({'a': 'unsubscribe', 'v': payload, 'm': "position_updates"})
         return self.__ws_send(data)
