@@ -158,23 +158,6 @@ class FullSnapQuote(CStruct):
     total_sell_quantity = CULong()
     volume = CUInt()
 
-'''
-class DPR(CStruct):
-    exchange = CUChar()
-    token = CUInt()
-    exchange_time_stamp = CUInt()
-    high = CUInt()
-    low = CUInt()
-
-
-class OpenInterest(CStruct):
-    exchange = CUChar()
-    token = CUInt()
-    current_open_interest = CUChar()
-    initial_open_interest = CUChar()
-    exchange_time_stamp = CUInt()
-
-'''
 class ExchangeMessage(CStruct):
     exchange = CUChar()
     length = CUShort()
@@ -188,8 +171,6 @@ class MarketStatus(CStruct):
     market_type = CString(length="length_of_market_type")
     length_of_status = CUShort()
     status = CString(length="length_of_status")
-
-
 
 class AlphaTrade(Connect):
     # dictionary object to hold settings
@@ -359,7 +340,7 @@ class AlphaTrade(Connect):
 
     def __on_data_callback(self, ws=None, message=None, data_type=None, continue_flag=None):        
         if(type(ws) is not websocket.WebSocketApp):  # This workaround is to solve the websocket_client's compatibility issue of older versions. ie.0.40.0 which is used in upstox. Now this will work in both 0.40.0 & newer version of websocket_client
-            message = ws                    
+            message = ws  
         if(message[0] == WsFrameMode.MARKETDATA):
             p = MarketData.parse(message[1:]).__dict__
             res = self.__modify_human_readable_values(p)
@@ -381,14 +362,15 @@ class AlphaTrade(Connect):
             if(self.__subscribe_callback is not None):
                 self.__subscribe_callback(res)
         elif(message[0] == WsFrameMode.MARKET_STATUS):
-            p = MarketStatus.parse(message[1:]).__dict__
-            res = self.__modify_human_readable_values(p)
+            res = MarketStatus.parse(message[1:]).__dict__
+            res["market_type"] = res["market_type"].decode('ascii')
+            res["status"] = res["status"].decode('ascii')
             self.__market_status_messages.append(res)
             if(self.__market_status_messages_callback is not None):
                 self.__market_status_messages_callback(res)
         elif(message[0] == WsFrameMode.EXCHANGE_MESSAGES):
-            p = ExchangeMessage.parse(message[1:]).__dict__
-            res = self.__modify_human_readable_values(p)
+            res = ExchangeMessage.parse(message[1:]).__dict__
+            res["message"] = res["message"].decode('ascii')
             self.__exchange_messages.append(res)
             if(self.__exchange_messages_callback is not None):
                 self.__exchange_messages_callback(res)
@@ -396,18 +378,7 @@ class AlphaTrade(Connect):
             p= json.loads(message[5:])
             if(self.__subscribe_callback is not None):
                 self.__order_update_callback(p)
-        '''
-        elif(message[0] == WsFrameMode.DPR):
-            p = DPR.parse(message[1:]).__dict__
-            res = self.__modify_human_readable_values(p)
-            if(self.__dpr_callback is not None):
-                self.__dpr_callback(res)
-        elif(message[0] == WsFrameMode.OI):
-            p = OpenInterest.parse(message[1:]).__dict__
-            res = self.__modify_human_readable_values(p)
-            if(self.__oi_callback is not None):
-                self.__oi_callback(res)
-        '''
+        
     def __on_close_callback(self, ws=None):
         self.__websocket_connected = False
         if self.__on_disconnect:
@@ -556,10 +527,11 @@ class AlphaTrade(Connect):
         return prod_type
 
     def place_order(self,  instrument,   order_type,  quantity, product_type,  transaction_type, is_amo=False,  price=0.0, 
-        trigger_price=None,
+        trigger_price=0.0,
         stop_loss=None, 
         square_off=None, 
         trailing_sl=None,
+        is_trailing = False,
         order_tag='python'):
         """ placing an order, many fields are optional and are not required
             for all order types
@@ -590,12 +562,11 @@ class AlphaTrade(Connect):
             raise TypeError(
                 "Optional parameter trigger_price not of type float")
 
-        prod_type = self.__get_product_type_str(
-            product_type, instrument.exchange)
+        prod_type = self.__get_product_type_str(product_type, instrument.exchange)
         # construct order object after all required parameters are met
         order = {'exchange': instrument.exchange,
                  "order_side": transaction_type.value,
-                 "order_type": order_type.value, #'LIMIT', 
+                 "order_type": order_type.value, 
                  'instrument_token': instrument.token,
                  'quantity': quantity,
                  'disclosed_quantity': 0,
@@ -603,62 +574,24 @@ class AlphaTrade(Connect):
                  'trigger_price': 0 , 
                  'validity': 'DAY',
                  'product': prod_type,
-                 "device": "api", 
-                 "user_order_id": 100786, 
-                 "execution_type": "REGULAR",
-                 #"market_protection_percentage": 5, #Optional
+                 'device': 'api', 
+                 'user_order_id': 100786, 
+                 'execution_type': 'REGULAR',
+                 'amo': is_amo,
+                 'trigger_price': trigger_price,
+                 #"market_protection_percentage": 10, #Optional
                  }
-        ''' PENDING work 
-        cover order
-        "body": {
-        "exchange": "NSE", // NSE, NFO, CDS, BSE, MCX
-        "order_type": "LIMIT", // LIMIT, MARKET
-        "instrument_token": 4717, // Example: GAIL-EQ
-        "quantity": 1, // Required
-        "disclosed_quantity": 0, // Optional
-        "price": 89.7, // Required for LIMIT orders
-        "order_side": "BUY", // BUY, SELL
-        "trigger_price": 89, // Required for Cover Orders
-        "validity": "DAY", // DAY, IOC
-        "product": "CO", // Required: Cover Order
-        "client_id": "XYZ", // Required
-        "user_order_id": 10002, // Optional: Custom order ID
-        "market_protection_percentage": 0, // Optional
-        "device": "WEB" // Optional
-        }
-        bracket order
-        "body": {
-        "exchange": "NSE", // NSE, NFO, CDS, BSE, MCX
-        "instrument_token": 22, // Required
-        "quantity": 1, // Required
-        "disclosed_quantity": 0, // Optional
-        "validity": "DAY", // DAY, IOC
-        "square_off_value": 1301, // Required: Target sell price (profit)
-        "stop_loss_value": 1290, // Required: Stop loss price (limit loss)
-        "price": 1299, // Optional for LIMIT orders
-        "trigger_price": 1299, // 0 for LIMIT, non-0 for SL
-        "source": "web", // Optional
-        "trailing_stop_loss": 1, // Optional: Trailing SL in %
-        "order_type": "SL", // SL, LIMIT
-        "product": "BO", // Required: Bracket Order
-        "order_side": "BUY", // BUY, SELL
-        "is_trailing": false, // Optional: true or false
-        "user_order_id": 10003, // Optional: Custom order ID
-        "client_id": "XYZ" // Required
-        }
-        '''
+        
 
         if stop_loss is not None:
             if isinstance(stop_loss, float):
                 order['stop_loss_value'] = stop_loss
-
             else:
                 raise TypeError(
                     "Optional parameter stop_loss not of type float")
         if square_off is not None:
             if isinstance(square_off, float):
                 order['square_off_value'] = square_off
-
             else:
                 raise TypeError(
                     "Optional parameter square_off not of type float")
@@ -675,10 +608,10 @@ class AlphaTrade(Connect):
             raise TypeError(
                 "Required parameter trigger_price not of type float")
 
-        helper = 'place_amo' if (is_amo == True) else 'place_order'
+        helper = 'place_order'
         if product_type is ProductType.BracketOrder:
             helper = 'place_bracket_order'
-            del order['product']
+            #del order['product']
             if not isinstance(stop_loss, float):
                 raise TypeError(
                     "Required parameter stop_loss not of type float")
@@ -686,7 +619,7 @@ class AlphaTrade(Connect):
             if not isinstance(square_off, float):
                 raise TypeError(
                     "Required parameter square_off not of type float")
-
+            order["is_trailing"]=  is_trailing #// Optional: true or false
         return self.__api_call_helper(helper, Requests.POST, None, order)
 
     def place_basket_order(self, orders):  ############### work pending
@@ -935,6 +868,18 @@ class AlphaTrade(Connect):
             mode = 'full_snapquote'
         elif(live_feed_type == LiveFeedType.OI):
             mode = 'open_interest'
+        elif(message[0] == WsFrameMode.MARKET_STATUS):
+            p = MarketStatus.parse(message[1:]).__dict__
+            res = self.__modify_human_readable_values(p)
+            self.__market_status_messages.append(res)
+            if(self.__market_status_messages_callback is not None):
+                self.__market_status_messages_callback(res)
+        elif(message[0] == WsFrameMode.EXCHANGE_MESSAGES):
+            p = ExchangeMessage.parse(message[1:]).__dict__
+            res = self.__modify_human_readable_values(p)
+            self.__exchange_messages.append(res)
+            if(self.__exchange_messages_callback is not None):
+                self.__exchange_messages_callback(res)
         elif(live_feed_type == LiveFeedType.ORDERUPDATE): # message_type == "OrderUpdateMessage":
                 arr = "OrderUpdateMessage"
                 mode = "updates"
