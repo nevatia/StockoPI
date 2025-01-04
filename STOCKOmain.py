@@ -69,9 +69,19 @@ def socket():
         print("Websocket opened!")
         subs_lst=[]
 
+    def exchange_messages(exch_msg):
+        print(exch_msg)
+        #print(api.get_exchange_messages())
+    
+    def market_status(mkt_Stat):
+        print(mkt_Stat)
+        #print(api.get_market_status_messages())
+
     api.start_websocket(subscribe_callback=event_handler_quote_update,
                           socket_open_callback=open_callback,
                           order_update_callback = order_update_callback,
+                          market_status_messages_callback=market_status,
+                          exchange_messages_callback=exchange_messages,
                           run_in_background=True)
 
     while(socket_opened==False):
@@ -92,6 +102,11 @@ def WS_start():
         sleep(1)
         api.subscribe_position_update()
         sleep(1)
+
+        api.subscribe_market_status_messages()
+        api.subscribe_exchange_messages()
+
+        sleep(1)            
     except Exception as err:
         print("Websocket Connection Failed for trading bot. Exiting..")
         print(f"An Exception: {err} has occured in the program.")
@@ -135,7 +150,6 @@ if __name__ == '__main__':
             # Start websocket
             WS_start()
             
-            
             idx=api.get_instrument_by_symbol('NFO', 'NIFTY25JANFUT')
             stk=api.get_instrument_by_symbol('NSE', 'RELIANCE-EQ')
             print(idx)
@@ -171,7 +185,6 @@ if __name__ == '__main__':
             sleep(2) 
             api.subscribe(Token, LiveFeedType.FULL_SNAPQUOTE)  
             sleep(2) 
-            
             
             Token = api.get_instrument_by_symbol("NSE","IDEA-EQ") 
             api.subscribe(Token, LiveFeedType.MARKET_DATA)        
@@ -230,7 +243,9 @@ if __name__ == '__main__':
             api.subscribe(Token, LiveFeedType.MARKET_DATA)        
             sleep(1)
             
-            
+            while(True):
+                pass
+
         else:
             print("Credential is not correct")
             sys.exit()    
