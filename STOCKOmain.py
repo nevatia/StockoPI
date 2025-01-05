@@ -133,7 +133,7 @@ def place_order(exchange: str, symbol: str, qty: int, price : float, BS: str, or
                      order_type = OrderType.Market,
                      product_type = ProductType.Delivery,
                      price = price,
-                     trigger_price = None,
+                     trigger_price = 0.0,
                      stop_loss = None,
                      square_off = None,
                      trailing_sl = None,
