@@ -61,21 +61,19 @@ def socket():
     def order_update_callback(msg):
         global ord_updt
         ord_updt = msg
-        print("WS order update:- \n ",ord_updt)
+        print("\n WS order update:- \n ",ord_updt)
 
     def open_callback():
         global socket_opened
         socket_opened = True
-        print("Websocket opened!")
+        print("\n Websocket opened!")
         subs_lst=[]
 
     def exchange_messages(exch_msg):
-        print(exch_msg)
-        #print(api.get_exchange_messages())
+        print("\n Exchange msg : ",exch_msg)
     
     def market_status(mkt_Stat):
-        print(mkt_Stat)
-        #print(api.get_market_status_messages())
+        print("\n Market Status : ",mkt_Stat)
 
     api.start_websocket(subscribe_callback=event_handler_quote_update,
                           socket_open_callback=open_callback,
@@ -150,99 +148,116 @@ if __name__ == '__main__':
             # Start websocket
             WS_start()
             
+            print("\n GET INSTRUMENT BY SYMBOL :-")
+            print("#"*50,"\n")
             idx=api.get_instrument_by_symbol('NFO', 'NIFTY25JANFUT')
+            print(idx,"\n")
             stk=api.get_instrument_by_symbol('NSE', 'RELIANCE-EQ')
-            print(idx)
-            print(stk) 
+            print(stk,"\n")
             
             print("Scrip info :-")
+            print("#"*50,"\n")
             scrip_info = api.get_scrip_info(idx)
-            print(scrip_info)
+            print(scrip_info,"\n")
  
             print("Profile :-")
+            print("#"*50,"\n")
             profile = api.get_profile()
-            print(profile)
+            print(profile,"\n")
             
             print("Balance :-")
+            print("#"*50,"\n")
             bal=api.get_balance() 
-            print(bal)
+            print(bal,"\n")
 
             print("Demat holdings :-")
+            print("#"*50,"\n")
             holdings= api.get_dematholdings()
-            print(holdings)
+            print(holdings,"\n")
 
             print("Subscribed exchanges :-")
+            print("#"*50,"\n")
             enabled_exchanges= api.get_exchanges()
-            print(enabled_exchanges)
+            print(enabled_exchanges,"\n")
             
             
             Token = api.get_instrument_by_symbol("NFO","RELIANCE25JAN1300CE") 
+            print("Ws live feed subscription, MARKET_DATA :-")
+            print("#"*50,"\n")
             api.subscribe(Token, LiveFeedType.MARKET_DATA) 
             sleep(2) 
+            print("\n Ws live feed subscription, COMPACT :-")
+            print("#"*50,"\n")
             api.subscribe(Token, LiveFeedType.COMPACT)  
             sleep(2) 
+            print("\n Ws live feed subscription, SNAPQUOTE :-")
+            print("#"*50,"\n")
             api.subscribe(Token, LiveFeedType.SNAPQUOTE)  
             sleep(2) 
+            print("\n Ws live feed subscription, FULL SNAPQUOTE :-")
+            print("#"*50,"\n")
             api.subscribe(Token, LiveFeedType.FULL_SNAPQUOTE)  
             sleep(2) 
             
+            print("\n Ws live feed subscription for IDEA-EQ Order testing :-")
+            print("#"*50,"\n")
             Token = api.get_instrument_by_symbol("NSE","IDEA-EQ") 
             api.subscribe(Token, LiveFeedType.MARKET_DATA)        
-
             sleep(1)
-            
-
             ############ ORDERS
             #Cautiously Place market order - 
             ord1=place_order('NSE','IDEA-EQ', 1, 5.00, "BUY", "LIMIT")
-            print("\n\nOrder placed :- ",ord1)            
-            print( ord1['data']['oms_order_id'])
-            sleep(5)
-            print("\n\n")
+            print("\nOrder placed :- ",ord1)
+            print("\n Order Number - ", ord1['data']['oms_order_id'])
+            print("#"*50,"\n")
+            sleep(2)
+
+            print("WS Order update in Dataframe :- ")
             print(pd.DataFrame([ord_updt]))
+            print("#"*50,"\n")
             ##############################################
 
             print("Order status :-")
             ord_hist= api.get_order_history(order_id = ord1['data']['oms_order_id'])
             print(ord_hist)
-
-
-            print("cancel order :-")
-            cancel= api.cancel_order(ord1['data']['oms_order_id'])
-            print(cancel)
-
-            
+            print("#"*50,"\n")
            
             print("Tradeboook :-")
             tradebook= api.get_tradebook()
             print(tradebook)
+            print("#"*50,"\n")
 
             print("Orderbook completed :-")
             ordbook= api.get_orderbook(pending=False)
             print(ordbook)
+            print("#"*50,"\n")
 
             print("Orderbook pendings :-")
             ordbook= api.get_orderbook(pending=True)
             print(ordbook)
+            print("#"*50,"\n")
 
             print("Orderbook default (pending) :-")
             ordbook= api.get_orderbook()
             print(ordbook)
+            print("#"*50,"\n")
 
             
             print("Live netpositions :-")
             day_pos = api.fetch_live_positions()
             print(day_pos)
+            print("#"*50,"\n")
 
             print("Historical netpositions :-")
             net_pos= api.fetch_netwise_positions()
             print(net_pos)
+            print("#"*50,"\n")
 
-            Token = api.get_instrument_by_symbol("NFO","PFC25JANFUT") 
-            print(Token)
-            api.subscribe(Token, LiveFeedType.MARKET_DATA)        
-            sleep(1)
-            
+            print("cancel order :-")
+            cancel= api.cancel_order(ord1['data']['oms_order_id'])
+            print(cancel)
+            print("#"*50,"\n")
+
             while(True):
                 pass
 
