@@ -15,7 +15,7 @@ import enum
 from datetime import datetime, timedelta, date
 from time import sleep
 from collections import OrderedDict
-from protlib import CUInt, CStruct, CLong, CULong , CUChar, CArray, CUShort, CString
+from stocko.protlib import CUInt, CStruct, CLong, CULong , CUChar, CArray, CUShort, CString
 from collections import namedtuple
 import pandas as pd
 import pytz
