@@ -22,7 +22,7 @@ Set up a virtual environment to isolate dependencies:
 
 ```bash
 python -m pip install virtualenv
-python -m virtualenv stocko
+python -m venv stocko
 ```
 
 Activate the environment:
