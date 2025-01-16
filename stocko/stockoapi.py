@@ -197,6 +197,7 @@ class AlphaTrade(Connect):
             'orderHistory': '/api/v1/order/{oms_order_id}/history?client_id={client_id}',
             'scripInfo': '/api/v1/contract/{exchange}?info=scrip&token={token}', 
             'searchScript':'/api/v1/search?key={keyword}',
+            'optionchain':'/api/v1/optionchain/NFO?token={Token}&num={strikes}&price={price}',
         },
         'socket_endpoint': 'wss://api.stocko.in/ws/v1/feeds?login_id={client_id}&access_token={access_token}'
     }
@@ -464,6 +465,11 @@ class AlphaTrade(Connect):
         """ Get balance/margins """
         return self.__api_call_helper('cashPositions', Requests.GET, {'client_id': self.__login_id}, None)
     
+    def get_optionchain(self,Token,strikes,price):
+        """ optionchain"""
+        params = {'Token':Token.token,'strikes':strikes,'price':price}
+        return self.__api_call_helper('optionchain', Requests.GET, params , None)
+  
     def get_balanceV2(self):
         """ Get balance/margins """
         return self.__api_call_helper('cashPositionsV2', Requests.GET, {'client_id': self.__login_id}, None)
