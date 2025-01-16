@@ -1118,7 +1118,7 @@ class AlphaTrade(Connect):
             r = requests.get(url, headers=headers)        
         return r
 
-    def get_historical_candles(self, exchange, symbol, start_time, end_time, interval=5, is_index=False): ###pending work
+    def get_candles(self, exchange, symbol, start_time, end_time, interval=5, is_index=False, time = 'minute'): ###pending work
         exchange = exchange.upper()
         idx = '' if not is_index else '_INDICES'
         divider = 100
@@ -1126,56 +1126,28 @@ class AlphaTrade(Connect):
             divider = 1e7
         # symbol = symbol.upper()
         instrument = self.get_instrument_by_symbol(exchange, symbol)
-        #print(instrument)
         start_time = int(start_time.timestamp())
         end_time = int(end_time.timestamp())
-
-        PARAMS = {
-            'candletype': 1,
-            'data_duration': interval,
-            'starttime': start_time,
-            'endtime': end_time,
-            'exchange': exchange + idx,
-            'type': 'historical',
-            'token': instrument.token
+        if time == 'minute':
+            candletype = 1    
+        elif time == 'hour':
+            candletype = 1    
+        elif time == 'day' or time == 'week' or time == 'month' :
+            candletype = 3   
+        params_tv = {
+        'exchange': exchange + idx, #'NFO',
+        'token': instrument.token,#35012,
+        'candletype': candletype,
+        'data_duration': interval,
+        'starttime': start_time,
+        'endtime': end_time,
         }
-
         r = requests.get(
-            'https://api.stocko.in/api/v1/charts', params=PARAMS, headers=self.__headers)
+            'https://web.stocko.in/api/v1/charts/tdv', params=params_tv, headers=self.__headers)
         data = r.json()
         return self.__format_candles(data, divider) #
 
-    def get_intraday_candles(self, exchange, symbol, interval=5): ###pending
-        exchange = exchange.upper()
-        divider = 100
-        if exchange == 'CDS':
-            divider = 1e7
-        # symbol = symbol.upper()
-        today = datetime.today()
-        start_time = int(datetime(today.year, today.month,
-                                  today.day, hour=9, minute=00).timestamp())
 
-        previous_interval_minute = datetime.now().minute // interval * interval
-
-        end_time = int(datetime(today.year, today.month,
-                                today.day, hour=today.hour, minute=previous_interval_minute).timestamp())
-
-        instrument = self.get_instrument_by_symbol(exchange, symbol)
-
-        PARAMS = {
-            'candletype': 1,
-            'data_duration': interval,
-            'starttime': start_time,
-            'endtime': end_time,
-            'exchange': exchange,
-            'type': 'live',
-            'token': instrument.token
-        }
-
-        r = requests.get(
-            'https://api.stocko.in/api/v1/charts', params=PARAMS, headers=self.__headers)
-        data = r.json()
-        return self.__format_candles(data, divider)
 
     def buy_bo(self, instrument, qty, price, trigger_price, stop_loss_value, square_off_value): #### pending
         data = self.place_order(TransactionType.Buy, instrument, qty,
