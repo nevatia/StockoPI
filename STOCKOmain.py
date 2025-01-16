@@ -147,6 +147,7 @@ if __name__ == '__main__':
         if(Stocko_login() == 1 ): 
             # Start websocket
             WS_start()
+            print(api.get_candles('NSE', 'RELIANCE-EQ', datetime(2025, 1, 14), datetime.now() ,interval=30, time = 'minute'))
             ## Inititate variables for OPTIONCHAIN and create OC table
             Token = api.get_instrument_by_symbol("NSE","Nifty Bank")
             strikes = 3
