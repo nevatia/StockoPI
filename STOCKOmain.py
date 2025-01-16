@@ -147,7 +147,43 @@ if __name__ == '__main__':
         if(Stocko_login() == 1 ): 
             # Start websocket
             WS_start()
-            
+            ## Inititate variables for OPTIONCHAIN and create OC table
+            Token = api.get_instrument_by_symbol("NSE","Nifty Bank")
+            strikes = 3
+            mid_strike= 49200
+            oc = api.get_optionchain(Token,strikes,mid_strike)
+            data=oc['result'][0]
+            rows = []
+            expiry_date = data['expiry_date']
+            for strike in data['strikes']:
+                strike_price = strike['strike_price']
+                call = strike['call_option']
+                put = strike['put_option']
+                rows.append({
+                    'expiry_date': expiry_date,
+                    'strike_price': strike_price,
+                    'option_type': 'CE',
+                    'token': call['token'],
+                    'exchange': call['exchange'],
+                    'symbol': call['symbol'],
+                    'trading_symbol': call['trading_symbol'],
+                    'close_price': float(call['close_price'])
+                })
+                rows.append({
+                    'expiry_date': expiry_date,
+                    'strike_price': strike_price,
+                    'option_type': 'PE',
+                    'token': put['token'],
+                    'exchange': put['exchange'],
+                    'symbol': put['symbol'],
+                    'trading_symbol': put['trading_symbol'],
+                    'close_price': float(put['close_price'])
+                })
+            df = pd.DataFrame(rows)
+            print(df)
+            #save to CSV
+            df.to_csv("options_table.csv", index=False)
+
             print("\n GET INSTRUMENT BY SYMBOL :-")
             print("#"*50,"\n")
             idx=api.get_instrument_by_symbol('NFO', 'NIFTY25JANFUT')
