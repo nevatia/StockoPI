@@ -258,7 +258,7 @@ class AlphaTrade(Connect):
 
     def __set_access_token(self):
         self.__access_token = super().get_access_token('true')
-        self.__headers['Authorisation'] = self.__access_token
+        self.__headers['Authorization'] = f'Bearer {self.__access_token}' 
         try:
             profile = self.get_profile()
         except Exception as e:
@@ -1106,8 +1106,6 @@ class AlphaTrade(Connect):
         # logger.debug('url:: %s http_method:: %s data:: %s headers:: %s', url, http_method, data, headers)        
         r = None
         headers = self.__headers
-        headers['Authorization'] = f'Bearer {self.__access_token}'
-        
         if http_method is Requests.POST:
             #r = self.reqsession.post(url, data=json.dumps(data), headers=headers)
             r = requests.post(url, data=json.dumps(data), headers=headers)
