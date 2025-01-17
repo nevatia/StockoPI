@@ -262,7 +262,7 @@ class AlphaTrade(Connect):
             token_file_path = os.path.join(script_dir, 'token.json')
             with open(token_file_path, 'r') as f:
                 data = json.load(f)
-                self.access_token = data['access_token']
+                self.__access_token = data['access_token']
                 self.__headers['Authorization'] = f'Bearer {self.__access_token}' 
                 profile = self.get_profile()
         except:
