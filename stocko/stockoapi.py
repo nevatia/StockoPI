@@ -257,8 +257,21 @@ class AlphaTrade(Connect):
         [ self.__get_master_contract(e) for e in master_contracts_to_download ]
 
     def __set_access_token(self):
+        try:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            token_file_path = os.path.join(script_dir, 'token.json')
+            with open(token_file_path, 'r') as f:
+                data = json.load(f)
+                self.access_token = data['access_token']
+                self.__headers['Authorization'] = f'Bearer {self.__access_token}' 
+                profile = self.get_profile()
+        except:
+            print(f"Couldn't get profile info ")
+            print(f"Creating fresh token..")
+            pass
         self.__access_token = super().get_access_token('true')
         self.__headers['Authorization'] = f'Bearer {self.__access_token}' 
+        
         try:
             profile = self.get_profile()
         except Exception as e:
