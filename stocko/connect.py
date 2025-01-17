@@ -33,23 +33,7 @@ class Connect:
         self.websocket_url = url
 
     def get_access_token(self,auto_login=False):
-        # read access token from token.json file
-        try:
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            token_file_path = os.path.join(script_dir, 'token.json')
-            with open(token_file_path, 'r') as f:
-                data = json.load(f)
-                self.access_token = data['access_token']
-                date_created = data['date_created']
-                # check if access token is expired when date_created is in format 24-12-2024T12:00:00 and check for 24 hours from date_created
-                if date_created.split("T")[0] == time.strftime("%d-%m-%Y"):
-                    if int(date_created.split("T")[1].split(":")[0]) + 12 > int(time.strftime("%H")):
-                        return self.access_token
-                else:
-                    print("Access token expired")
-        except:
-            pass
-            # if access token is not present in token.json file, then get access token from server
+        #print("Getting API login ")
         base_url = self.base_url
         client_id = self.client_id
         client_secret = self.client_secret
