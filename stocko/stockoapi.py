@@ -268,10 +268,9 @@ class AlphaTrade(Connect):
         except:
             print(f"Couldn't get profile info ")
             print(f"Creating fresh token..")
-            pass
-        self.__access_token = super().get_access_token('true')
-        self.__headers['Authorization'] = f'Bearer {self.__access_token}' 
-        
+            self.__access_token = super().get_access_token('true')
+            self.__headers['Authorization'] = f'Bearer {self.__access_token}' 
+            
         try:
             profile = self.get_profile()
         except Exception as e:
