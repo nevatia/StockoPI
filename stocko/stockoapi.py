@@ -299,8 +299,8 @@ class AlphaTrade(Connect):
                 dictionary[key] = new_values
         return dictionary
 
-    def __format_candles(self, data, divider=100):
-        records = data['data']
+    def __format_candles(self, data, divider=1):
+        records = data['data']['candles']
         df = pd.DataFrame(records, columns=[
             'date', 'open', 'high', 'low', 'close', 'volume'])  # , index=0)
         df['date'] = df['date'].apply(
@@ -1121,9 +1121,9 @@ class AlphaTrade(Connect):
     def get_candles(self, exchange, symbol, start_time, end_time, interval=5, is_index=False, time = 'minute'): ###pending work
         exchange = exchange.upper()
         idx = '' if not is_index else '_INDICES'
-        divider = 100
+        divider = 1
         if exchange == 'CDS':
-            divider = 1e7
+            divider = 1 #1e7
         # symbol = symbol.upper()
         instrument = self.get_instrument_by_symbol(exchange, symbol)
         start_time = int(start_time.timestamp())
@@ -1179,25 +1179,7 @@ class AlphaTrade(Connect):
                 ',', '').astype(float)
             return float(positions['m2m'].sum())
 
-    def _format_candles(self, data, interval): 
-        records = data['data']['candles']
-        df = pd.DataFrame(records, columns=[
-            'datetime', 'open', 'high', 'low', 'close', 'volume'])  # , index=0)
-        df['datetime'] = df['datetime'].apply(
-            pd.Timestamp, unit='s', tzinfo=pytz.timezone('Asia/Kolkata'))
-
-        df[['open', 'high', 'low', 'close']] = df[[
-            'open', 'high', 'low', 'close']].astype(float)
-        df['volume'] = df['volume'].astype(int)
-        df.set_index('datetime', inplace=True)
-        if interval in ['2H', '3H', '4H', 'W', 'M']:
-            if interval == 'W':
-                interval = 'W-Mon'
-            df = df.resample(interval, origin='start').agg({'open': 'first', 'high': 'max',
-                                                            'low': 'min', 'close': 'last', 'volume': 'sum'}).dropna()
-        df.index = df.index.astype(str).str[:-6]
-        return df
-
+    
     def check_masters(self):
         ############ downloading instrument file if yesterdays
         file_path = './stocko/instruments/stocko_instruments.csv'
