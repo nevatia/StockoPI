@@ -43,7 +43,7 @@ class Connect:
                 date_created = data['date_created']
                 # check if access token is expired when date_created is in format 24-12-2024T12:00:00 and check for 24 hours from date_created
                 if date_created.split("T")[0] == time.strftime("%d-%m-%Y"):
-                    if int(date_created.split("T")[1].split(":")[0]) + 24 > int(time.strftime("%H")):
+                    if int(date_created.split("T")[1].split(":")[0]) + 12 > int(time.strftime("%H")):
                         return self.access_token
                 else:
                     print("Access token expired")
