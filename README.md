@@ -72,7 +72,7 @@ client_secret = "your client secret received from support"
 
 ## **Usage**
 
-Once set up, you can use the Stocko API wrapper to interact with the trading platform. Refer to the examples in the repository to get started.
+Once set up, you can use the Stocko API wrapper to interact with the trading platform. Refer to the examples in the repository (stockomain.py) to get started.
 
 ---
 
