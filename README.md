@@ -1,6 +1,6 @@
 # StockoPI - Unofficial Trading API Wrapper for Stocko (Formerly SASOnline Ltd.)
 
-This repository provides an unofficial Python API wrapper for Stocko, designed to simplify interaction with their trading platform. Follow the steps below to set up and use the library.
+Carrying forward the great work of Algo2t/alphatrade. This repository provides an unofficial Python API wrapper for Stocko, designed to simplify interaction with their trading platform. Follow the steps below to set up and use the library.
 Discussion forum :- https://t.me/sasonlineunofficial
 
 ---
