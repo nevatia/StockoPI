@@ -1213,7 +1213,7 @@ class AlphaTrade(Connect):
             self.download_master()
 
     def download_master(self):
-        url = "https://alphaapi.sasonline.in/api/v1/contract/Compact?info=download"
+        url = "https://web.stocko.in/api/v1/contract/Compact?info=download"
         destination_folder = Path("./stocko/instruments"  )
         zip_file_name = "Stocko_instruments.zip"  
         zip_file_path = destination_folder/zip_file_name
